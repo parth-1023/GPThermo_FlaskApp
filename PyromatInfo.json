@@ -1,0 +1,122 @@
+[
+  {
+    "ID": "ig.F2Fe",
+    "class": "ig",
+    "name": "iron difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2H2Si",
+    "class": "ig",
+    "name": "Difluorosilane",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Hg",
+    "class": "ig",
+    "name": "mercury difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2K-",
+    "class": "ig2",
+    "name": "",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2K2",
+    "class": "ig2",
+    "name": "Dipotassium difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Li-",
+    "class": "ig2",
+    "name": "",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Li2",
+    "class": "ig2",
+    "name": "Lithium fluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Mg",
+    "class": "ig2",
+    "name": "Magnesium fluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Mg+",
+    "class": "ig2",
+    "name": "",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2Mo",
+    "class": "ig",
+    "name": "Molybdenum difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2N",
+    "class": "ig2",
+    "name": "Difluoroamino radical",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2O",
+    "class": "ig2",
+    "name": "Oxygen difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "ig.F2S",
+    "class": "ig2",
+    "name": "Sulfur difluoride",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.C2H2F4",
+    "class": "mp1",
+    "name": "R-134a",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.C3H2F4_1",
+    "class": "mp1",
+    "name": "R-1234ze(E)",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.CH4",
+    "class": "mp1",
+    "name": "Methane",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.CO2",
+    "class": "mp1",
+    "name": "Carbon dioxide",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.H2O",
+    "class": "mp1",
+    "name": "Water",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.N2",
+    "class": "mp1",
+    "name": "Nitrogen",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  },
+  {
+    "ID": "mp.O2",
+    "class": "mp1",
+    "name": "Oxygen",
+    "properties": ["T", "p", "d", "v", "cp", "cv", "gam", "e", "h", "s", "mw", "R"]
+  }
+]

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>GPThermo: Thermodynamics Tutor</title>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Carniola:wght@700&display=swap');
+
+    body{font-family:Arial, sans-serif;background:#fff;color:#2E2E2E;margin:0}
+    .container{width:60%;margin:auto;padding:20px;background:#8B0000;border-radius:8px;text-align:center}
+    h1{font-family:'Carniola',serif;color:#fff;font-weight:bold;margin:0 0 20px}
+
+    #chat_area{width:100%;height:300px;background:#EAECEE;color:#000;
+               font-family:'Times New Roman',serif;padding:10px;margin-bottom:20px;
+               border:1px solid #8B0000;overflow-y:auto;text-align:left}
+
+    input[type=text]{width:85%;padding:10px;background:#8B0000;color:#fff;border:1px solid #EAECEE}
+    button{width:10%;padding:10px;background:#EAECEE;color:#000;border:none;cursor:pointer}
+    button:hover{background:#FF4500}
+
+    img.logo{width:100%;max-width:200px;margin-bottom:20px}
+    img#thermo-fig{max-width:100%;height:auto;margin-top:20px;display:none;
+                   border:2px solid #EAECEE;border-radius:5px}
+
+    /* clickable link that will flash */
+    a#output-link{display:inline-block;margin-top:15px;padding:10px 20px;background:#EAECEE;
+                  color:#000;border-radius:5px;text-decoration:none;transition:background-color .25s}
+    a#output-link.flash{background:limegreen!important}
+
+    /* optional smoother flash via keyframes */
+    @keyframes greenFlash{
+      0%{background:#EAECEE}
+      50%{background:limegreen}
+      100%{background:#EAECEE}
+    }
+    a#output-link.flash{animation:greenFlash 10s}
+  </style>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async
+          src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <div class="container">
+    <img class="logo"
+         src="{{ url_for('static', filename='images/WPI+Square+Logo.png') }}"
+         alt="WPI Logo">
+
+    <h1>GPThermo: Thermodynamics Tutor</h1>
+
+    <div id="chat_area"></div>
+
+    <form id="message_form">
+      <input type="text" id="message" placeholder="Enter your message here..." />
+      <button type="submit">Send</button>
+    </form>
+
+    <!-- hidden figure -->
+    <img id="thermo-fig" alt="Thermodynamic Diagram">
+
+    <!-- link that opens the PNG and (on click) reveals the inline preview -->
+    <br>
+    <a id="output-link"
+       href="{{ url_for('static', filename='output.png') }}"
+       target="_blank">
+       Open Output Image
+    </a>
+  </div>
+
+  <script>
+    /* ---------- Chat submission ---------- */
+    document.getElementById('message_form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msgInput   = document.getElementById('message');
+      const chatArea   = document.getElementById('chat_area');
+      const msg        = msgInput.value.trim();
+      if (!msg) return;
+
+      // display user line
+      chatArea.appendChild(Object.assign(document.createElement('p'), {textContent:`You: ${msg}`}));
+      msgInput.value = '';
+
+      // send to backend
+      const res   = await fetch('/send_message', {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded'},
+        body:'message=' + encodeURIComponent(msg)
+      });
+      const data  = await res.json();
+
+      // display bot line
+      const botP  = document.createElement('p');
+      botP.innerHTML = 'Bot: ' + (data.bot_message || '[No response]');
+      chatArea.appendChild(botP);
+
+      // re-typeset any math then autoscroll
+      MathJax.typesetPromise().then(()=>{chatArea.scrollTop = chatArea.scrollHeight});
+    });
+
+    /* ---------- Show inline figure on link click ---------- */
+    const outputLink = document.getElementById('output-link');
+    outputLink.addEventListener('click', () => {
+      const fig = document.getElementById('thermo-fig');
+      // cache-bust so we always pull the newest figure for inline view
+      fig.src = outputLink.href + '?t=' + Date.now();
+      fig.style.display = 'block';
+      // allow default behaviour (opens in new tab) to proceed
+    });
+
+    /* ---------- Polling for updates & flashing ---------- */
+    const imageURL = "{{ url_for('static', filename='output.png') }}";
+    let lastModified = null;
+
+    async function checkImageUpdate(){
+      try{
+        const r = await fetch(imageURL, {method:'HEAD', cache:'no-store'});
+        const mod = r.headers.get('Last-Modified');
+
+        if (lastModified && mod !== lastModified){
+          outputLink.classList.add('flash');
+          // remove the class after animation ends (0.6 s)
+          setTimeout(()=>outputLink.classList.remove('flash'), 650);
+        }
+        lastModified = mod;
+      }catch(err){
+        console.error('Image check failed:', err);
+      }
+    }
+    setInterval(checkImageUpdate, 3000);   // poll every 3 s
+  </script>
+</body>
+</html>
