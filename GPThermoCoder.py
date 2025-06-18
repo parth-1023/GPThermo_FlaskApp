@@ -21,6 +21,7 @@ from langchain_community.document_loaders import PyPDFLoader
 import tempfile
 import pyromat as pm
 import matplotlib
+matplotlib.use('Agg')
 import json
 import base64
 from pathlib import Path
@@ -29,7 +30,6 @@ import logging
 import traceback
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
-from dotenv import load_dotenv
 
 
 logging.basicConfig(level=logging.INFO)
@@ -37,7 +37,7 @@ logging.basicConfig(level=logging.INFO)
 #default file for generated pngs
 #figure_path = "output.png"
 figure_path = Path(__file__).parent / "static" / "output.png"
-load_dotenv()
+
 
 # _____________________ SCHEMA _____________________
 class ThermoProblem(BaseModel):
