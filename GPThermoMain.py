@@ -9,9 +9,11 @@ from typing import TypedDict, Union
 from GPThermoCoder import ThermoSolver
 from langchain_openai import ChatOpenAI
 from time import sleep
-from dotenv import load_dotenv
 
-load_dotenv()
+from dotenv import load_dotenv
+load_dotenv() 
+openai_api_key = os.getenv("OPENAI_API_KEY") 
+print(f"OpenAI API Key: {openai_api_key}")
 
 # ------------------ State ------------------
 class GraphState(TypedDict, total=False):
@@ -144,6 +146,7 @@ if __name__ == "__main__":
             if user_input.lower() in {"exit", "quit"}:
                 break
             response = agent.run_conversation_chain(user_input)
+            # print(agent.chat_history)
             print("AI:", response)
         except Exception as e:
             print(f"[EXCEPTION] {e}")
