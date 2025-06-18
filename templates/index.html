@@ -21,12 +21,16 @@
     button:hover{background:#FF4500}
 
     img.logo{width:100%;max-width:200px;margin-bottom:20px}
-    img#thermo-fig{max-width:100%;height:auto;margin-top:20px;display:none;
-                   border:2px solid #EAECEE;border-radius:5px}
+    img#thermo-fig{max-width:100%;height:auto;margin-top:20px;
+                   border:2px solid #EAECEE;border-radius:5px;
+                   display:none; /* Ensure it's hidden by default */
+    }
 
     /* clickable link that will flash */
     a#output-link{display:inline-block;margin-top:15px;padding:10px 20px;background:#EAECEE;
-                  color:#000;border-radius:5px;text-decoration:none;transition:background-color .25s}
+                  color:#000;border-radius:5px;text-decoration:none;transition:background-color .25s;
+                  display: none; /* Hide link initially, show only if figure is generated */
+    }
     a#output-link.flash{background:limegreen!important}
 
     /* optional smoother flash via keyframes */
@@ -35,7 +39,14 @@
       50%{background:limegreen}
       100%{background:#EAECEE}
     }
-    a#output-link.flash{animation:greenFlash 10s}
+    a#output-link.flash{animation:greenFlash 0.6s} /* Shorter flash, as response is immediate */
+
+    .loading {
+        text-align: center;
+        color: #fff; /* White text on red background */
+        margin-top: 10px;
+        display: none; /* Hidden by default */
+    }
   </style>
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
@@ -56,79 +67,120 @@
       <input type="text" id="message" placeholder="Enter your message here..." />
       <button type="submit">Send</button>
     </form>
+    <div class="loading" id="loadingIndicator">Thinking...</div>
 
-    <!-- hidden figure -->
+
     <img id="thermo-fig" alt="Thermodynamic Diagram">
 
-    <!-- link that opens the PNG and (on click) reveals the inline preview -->
     <br>
     <a id="output-link"
-       href="{{ url_for('static', filename='output.png') }}"
-       target="_blank">
+       href="#" target="_blank">
        Open Output Image
     </a>
   </div>
 
   <script>
+    const chatArea = document.getElementById('chat_area');
+    const msgInput = document.getElementById('message');
+    const thermoFig = document.getElementById('thermo-fig');
+    const outputLink = document.getElementById('output-link');
+    const loadingIndicator = document.getElementById('loadingIndicator');
+
+    // Initial welcome message from AI
+    chatArea.appendChild(Object.assign(document.createElement('p'), {
+        textContent: "Bot: Welcome to GPThermo! I can help you with thermodynamics problems and questions."
+    }));
+
+
     /* ---------- Chat submission ---------- */
     document.getElementById('message_form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const msgInput   = document.getElementById('message');
-      const chatArea   = document.getElementById('chat_area');
-      const msg        = msgInput.value.trim();
+      const msg = msgInput.value.trim();
       if (!msg) return;
 
       // display user line
       chatArea.appendChild(Object.assign(document.createElement('p'), {textContent:`You: ${msg}`}));
-      msgInput.value = '';
+      msgInput.value = ''; // Clear input immediately
+      loadingIndicator.style.display = 'block'; // Show loading
 
-      // send to backend
-      const res   = await fetch('/send_message', {
-        method:'POST',
-        headers:{'Content-Type':'application/x-www-form-urlencoded'},
-        body:'message=' + encodeURIComponent(msg)
-      });
-      const data  = await res.json();
+      // Hide previous figure and link
+      thermoFig.style.display = 'none';
+      outputLink.style.display = 'none';
+      outputLink.classList.remove('flash'); // Remove flash if it was there
 
-      // display bot line
-      const botP  = document.createElement('p');
-      botP.innerHTML = 'Bot: ' + (data.bot_message || '[No response]');
-      chatArea.appendChild(botP);
 
-      // re-typeset any math then autoscroll
-      MathJax.typesetPromise().then(()=>{chatArea.scrollTop = chatArea.scrollHeight});
+      try {
+          // Send to backend with JSON body
+          const res = await fetch('/ask', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'}, // Changed content type
+            body:JSON.stringify({ question: msg }) // Send as JSON
+          });
+          const data  = await res.json();
+          loadingIndicator.style.display = 'none'; // Hide loading
+
+          // display bot line
+          const botP  = document.createElement('p');
+          if (data.error) {
+              botP.textContent = `Bot: Error: ${data.error}`;
+          } else {
+              botP.innerHTML = 'Bot: ' + (data.text_answer || '[No response]'); // Use text_answer
+          }
+          chatArea.appendChild(botP);
+
+          // Handle figure display
+          if (data.figure_url) {
+              // Set the image source and link href
+              thermoFig.src = data.figure_url + '?t=' + Date.now(); // Cache-bust
+              outputLink.href = data.figure_url;
+
+              // Display the image and link
+              thermoFig.style.display = 'block';
+              outputLink.style.display = 'inline-block';
+
+              // Apply the flash animation
+              outputLink.classList.add('flash');
+              // Remove the class after animation ends (0.6s as per CSS keyframe)
+              setTimeout(() => outputLink.classList.remove('flash'), 650);
+
+              // Scroll to bottom after image loads if needed
+              thermoFig.onload = () => {
+                  chatArea.scrollTop = chatArea.scrollHeight;
+                  MathJax.typesetPromise(); // Re-typeset math too
+              };
+          } else {
+              // If no figure, ensure they are hidden
+              thermoFig.style.display = 'none';
+              outputLink.style.display = 'none';
+          }
+
+          // re-typeset any math then autoscroll
+          MathJax.typesetPromise().then(()=>{
+            chatArea.scrollTop = chatArea.scrollHeight;
+          });
+
+      } catch (error) {
+          console.error('Fetch error:', error);
+          loadingIndicator.style.display = 'none'; // Hide loading
+          const errorP = document.createElement('p');
+          errorP.textContent = 'Bot: An unexpected error occurred. Please try again.';
+          chatArea.appendChild(errorP);
+          chatArea.scrollTop = chatArea.scrollHeight;
+      }
     });
 
     /* ---------- Show inline figure on link click ---------- */
-    const outputLink = document.getElementById('output-link');
-    outputLink.addEventListener('click', () => {
-      const fig = document.getElementById('thermo-fig');
-      // cache-bust so we always pull the newest figure for inline view
-      fig.src = outputLink.href + '?t=' + Date.now();
-      fig.style.display = 'block';
-      // allow default behaviour (opens in new tab) to proceed
+    outputLink.addEventListener('click', (e) => {
+      // The image is already shown on response, so this click is just for new tab
+      // Prevent default to avoid re-setting src, it's already set
+      // e.preventDefault(); // If you want to only show inline and not open new tab
+      // However, your original logic wants it to open in a new tab AND show inline
+      // Since it's already inline on response, clicking just opens the new tab.
+      // So no need for this specific event listener as the link's default behavior is fine.
     });
 
-    /* ---------- Polling for updates & flashing ---------- */
-    const imageURL = "{{ url_for('static', filename='output.png') }}";
-    let lastModified = null;
-
-    async function checkImageUpdate(){
-      try{
-        const r = await fetch(imageURL, {method:'HEAD', cache:'no-store'});
-        const mod = r.headers.get('Last-Modified');
-
-        if (lastModified && mod !== lastModified){
-          outputLink.classList.add('flash');
-          // remove the class after animation ends (0.6 s)
-          setTimeout(()=>outputLink.classList.remove('flash'), 650);
-        }
-        lastModified = mod;
-      }catch(err){
-        console.error('Image check failed:', err);
-      }
-    }
-    setInterval(checkImageUpdate, 3000);   // poll every 3 s
+    // We don't need the polling function `checkImageUpdate` anymore.
+    // The image display and flashing are directly triggered by the /ask response.
   </script>
 </body>
 </html>
