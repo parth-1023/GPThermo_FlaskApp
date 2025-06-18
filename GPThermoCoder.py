@@ -77,7 +77,7 @@ class State(TypedDict, total=False):
 class ThermoSolver:
     def __init__(self, model_name: str = "gpt-4o-2024-08-06"):
         os.environ["LANGSMITH_TRACING"] = "true"
-        load_dotenv('API.env')
+        load_dotenv()
 
         with open('PyromatInfo.json', 'r') as f:
             self.fluid_data = json.load(f)
