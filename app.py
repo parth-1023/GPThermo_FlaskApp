@@ -1,51 +1,37 @@
 # app.py
-from flask import (
-    Flask, request, jsonify,
-    render_template, send_from_directory
-)
-from GPThermoMain import ConversationAgent
-import os, pathlib
+from flask import Flask, request, jsonify, render_template
+from web_thermo_agent import WebConversationAgent # Import your new agent file
+import os
 
-# -------------------------------------------------------------------
-# basic config
-# -------------------------------------------------------------------
-STATIC_DIR   = pathlib.Path(__file__).parent / "static"
-FIGURE_NAME  = "output.png"           # ThermoSolver should overwrite static/output.png
+app = Flask(__name__)
 
-app   = Flask(__name__, static_folder=str(STATIC_DIR))
-agent = ConversationAgent()
+# Initialize the agent once when the app starts
+# For a high-traffic app, you might use a connection pool or per-request initialization
+web_agent = WebConversationAgent()
 
-# -------------------------------------------------------------------
-# serve the current diagram (timestamp in URL busts browser cache)
-# -------------------------------------------------------------------
-@app.route("/figure/<path:dummy>")
-def serve_figure(dummy):
-    return send_from_directory(
-        app.static_folder, FIGURE_NAME, mimetype="image/png"
-    )
+# Ensure the static directory exists for serving images
+static_dir = os.path.join(os.path.dirname(__file__), 'static')
+os.makedirs(static_dir, exist_ok=True) # Create 'static' folder if it doesn't exist
 
-# -------------------------------------------------------------------
-# pages & API
-# -------------------------------------------------------------------
-@app.route("/")
-def home():
-    return render_template("index.html")
+@app.route('/')
+def index():
+    """Serves the main HTML page for the chat interface."""
+    return render_template('index.html')
 
-@app.route("/send_message", methods=["POST"])
-def send_message():
-    message = request.form.get("message", "").strip()
-    if not message:
-        return jsonify({"error": "Message is required"}), 400
+@app.route('/ask', methods=['POST'])
+def ask_thermo():
+    """API endpoint to receive user questions and return AI responses."""
+    user_input = request.json.get('question')
+    if not user_input:
+        return jsonify({"error": "No question provided"}), 400
 
-    try:
-        bot_message = agent.run_conversation_chain(message)
-        return jsonify({"bot_message": bot_message})
-    except Exception as exc:
-        return jsonify({"error": str(exc)}), 500
+    # Call the web-ready agent's method
+    response_data = web_agent.run_conversation_chain(user_input)
 
-# -------------------------------------------------------------------
-# WSGI entry-point
-# -------------------------------------------------------------------
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
+    # response_data will be a dictionary: {"text_answer": "...", "figure_url": "..."}
+    return jsonify(response_data)
+
+if __name__ == '__main__':
+    # Run the Flask app
+    # debug=True allows for auto-reloading and better error messages during development
+    app.run(debug=True)
